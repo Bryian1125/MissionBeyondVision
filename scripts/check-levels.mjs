@@ -11,7 +11,7 @@
  */
 
 import { LEVELS, matOf } from '../src/levels.js'
-import { roomWalls, resolveCircle, reachable, isReachable } from '../src/geometry.js'
+import { roomWalls, resolveCircle, reachable, isReachable, clearLine } from '../src/geometry.js'
 import { ROVER_R, INTERACT_RANGE } from '../src/engine.js'
 
 let failures = 0
@@ -122,6 +122,44 @@ for (const level of LEVELS) {
     cursorPt = o
   }
   ok('route has room to manoeuvre', unfair.length === 0, unfair.join(', '))
+
+  // --- fairness: nowhere to get stranded.
+  //     This is the one thing that can actually strand someone: an objective
+  //     sealed behind a gap the rover cannot comfortably fly back out of. So we
+  //     flood from each objective with the rover inflated to COMFORT — the same
+  //     80-units-of-clearance standard used for the route above — and require
+  //     that the way back to the spawn lies inside that flood.
+  //
+  //     It has to be a flood and not a ray test. "Can I see a long way from
+  //     here" is a bad proxy: a narrow corridor legitimately has walls close on
+  //     both sides and is perfectly safe, while a dead-end room with a wide
+  //     mouth has open space all around it and is still a trap. Only
+  //     connectivity tells the two apart.
+  const stranded = []
+  for (const o of [...level.objectives, level.exit]) {
+    const field2 = reachable(level.room, solids, o, COMFORT, 20)
+    const home = o === level.exit ? level.objectives[level.objectives.length - 1] : level.spawn
+    if (!field2 || !isReachable(field2, home.x, home.y, 2)) stranded.push(o.label)
+  }
+  ok('nowhere to get stranded', stranded.length === 0, stranded.join(', '))
+
+  // --- fairness: every objective must announce the NEXT one before you leave.
+  //     The objectives are the navigation, so they have to chain: standing at
+  //     one, you must already be able to see the next. Otherwise a player flies
+  //     a whole corridor in silence and only finds out what was waiting at the
+  //     far end once there is nothing to do about it.
+  //
+  //     Line of sight, with no distance limit. Range is not the concern here —
+  //     the approach tick already covers distance, because it is radar and
+  //     always answers. What the tick cannot do is tell you the next objective
+  //     exists behind a bulkhead. That is what this is checking.
+  const silent = []
+  let from = level.spawn
+  for (const o of [...level.objectives, level.exit]) {
+    if (!clearLine(from.x, from.y, o.x, o.y, solids)) silent.push(`${o.label}`)
+    from = o
+  }
+  ok('each objective announces the next', silent.length === 0, silent.join(', '))
 
   console.log('')
 }

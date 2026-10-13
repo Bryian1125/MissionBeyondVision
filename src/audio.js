@@ -20,20 +20,25 @@
  * and only their parameters move.
  */
 
-import { matOf } from './levels.js'
+import { PING_RANGE } from './levels.js'
 
 /** How long one world unit of distance takes to come back as an echo. */
 const SEC_PER_UNIT = 0.0024
 /** A click sounds every this many units — your mental ruler. */
 const RANGE_STEP = 50
-/** How far a ping reaches. */
-export const PING_RANGE = 560
+// PING_RANGE lives in levels.js, with the world data it describes.
 
 export class Audio {
   constructor() {
     this.ctx = null
     this.ready = false
     this.muted = false
+    /**
+     * The engine hum and the listen static only sound while a mission is being
+     * flown. Between missions they are silent, so returning to the menu is
+     * quiet and the next launch starts from silence again.
+     */
+    this.missionActive = false
   }
 
   /**
@@ -104,9 +109,34 @@ export class Audio {
     if (this.master) this.master.gain.value = m ? 0 : 0.9
   }
 
+  /**
+   * Mission flight has begun. The hum ramps up from silence on the first
+   * `setThrottle` call, so this does not need to make any noise itself.
+   */
+  startMission() {
+    this.missionActive = true
+  }
+
+  /**
+   * Mission flight is over — completed, quit, or bailed to the menu.
+   *
+   * Without this the engine note simply stayed at whatever level you left it
+   * at, and the rover kept rumbling away on the level select screen forever.
+   * Gains are ramped rather than cut, so it fades out instead of clicking.
+   */
+  endMission() {
+    this.missionActive = false
+    if (!this.ready) return
+    const now = this.now
+    for (const gain of [this.humGain.gain, this.noiseGain.gain]) {
+      gain.cancelScheduledValues(now)
+      gain.setTargetAtTime(0, now, 0.12)
+    }
+  }
+
   /** Engine note follows throttle, so you can hear how fast you are moving. */
   setThrottle(t) {
-    if (!this.ready) return
+    if (!this.ready || !this.missionActive) return
     const now = this.now
     this.humGain.gain.setTargetAtTime(0.035 + t * 0.05, now, 0.08)
     this.humOsc.frequency.setTargetAtTime(58 + t * 26, now, 0.1)
@@ -114,7 +144,7 @@ export class Audio {
 
   /** Static swells as the current objective gets closer. 0 = far, 1 = on it. */
   setListen(level, distance) {
-    if (!this.ready) return
+    if (!this.ready || !this.missionActive) return
     const now = this.now
     const near = Math.max(0, 1 - distance / 420)
     this.noiseGain.gain.setTargetAtTime(level * 0.05 * near, now, 0.12)
@@ -151,8 +181,13 @@ export class Audio {
   }
 
   /**
-   * Schedule one returning tone per hit, plus the range clicks.
-   * `hits` is [{ dist, bearing, mat }] with bearing relative to facing.
+   * Schedule one tone per acoustic target.
+   *
+   * The engine has already done the geometry: each hit carries the distance
+   * that becomes its delay and the bearing that becomes its pan. All this layer
+   * decides is what it sounds like — walls use their material pitch, and the
+   * objective and exit use their own brighter signatures so they can never be
+   * mistaken for more hull.
    */
   echoes(hits) {
     if (!this.ready) return
@@ -164,11 +199,17 @@ export class Audio {
     }
 
     for (const hit of hits) {
-      const mat = matOf(hit.mat)
-      const when = t0 + hit.dist * SEC_PER_UNIT
       const near = Math.max(0, 1 - hit.dist / PING_RANGE)
-      // Louder and brighter when close, so proximity is obvious.
-      this._blip(when, mat.hz, 0.16 + near * 0.1, 0.05 + near * 0.16, hit.bearing)
+      const when = t0 + hit.dist * SEC_PER_UNIT
+      const dur = 0.16 + near * 0.1
+      const vol = 0.05 + near * 0.16
+
+      if (hit.kind === 'objective' || hit.kind === 'exit') {
+        // Pure and bright, so a target never reads as a piece of the room.
+        this._blip(when, hit.hz, dur + 0.06, vol + 0.05, Math.sin(hit.bearing), 'sine')
+      } else {
+        this._blip(when, hit.hz, dur, vol, Math.sin(hit.bearing), 'triangle')
+      }
     }
   }
 

@@ -118,6 +118,38 @@ export function roomWalls(room, thickness = 40) {
 }
 
 /**
+ * The closest point on an axis-aligned rect to a given point.
+ * This is how a whole wall becomes one acoustic target: the wall answers from
+ * wherever you are nearest to it, rather than from its centre (which would sit
+ * inside the block and be silent).
+ */
+export function nearestOnRect(px, py, r) {
+  const x = clamp(px, r.x, r.x + r.w)
+  const y = clamp(py, r.y, r.y + r.h)
+  return { x, y, dist: Math.hypot(px - x, py - y) }
+}
+
+/**
+ * Is there nothing solid between two points?
+ *
+ * This is what makes a target "accessible to sonar". Without it you would hear
+ * the far side of a solid block as though it were right there, and the whole
+ * room would collapse into a flat list of distances.
+ *
+ * `ignore` lets a wall be tested against everything except itself, so it does
+ * not count as its own obstruction.
+ */
+export function clearLine(fromX, fromY, toX, toY, solids, ignore = null) {
+  const dx = toX - fromX
+  const dy = toY - fromY
+  const dist = Math.hypot(dx, dy)
+  if (dist < 1e-6) return true
+  const blockers = ignore ? solids.filter((s) => s !== ignore) : solids
+  // Stop just short of the target so its own surface cannot clip the ray.
+  return !castRay(fromX, fromY, dx / dist, dy / dist, dist - 1.5, blockers)
+}
+
+/**
  * Breadth-first search over free space, on a grid.
  * Used by `npm run check` to prove every level is actually solvable.
  * Returns the set of reachable cells, or null if the start is stuck.

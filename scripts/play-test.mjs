@@ -242,12 +242,107 @@ function level0Left() {
   ok('cannot use an objective from across the room', took === false && e.index === 0)
 }
 {
-  // Ping must find the walls of a sealed box.
+  // Ping must find the room.
   const e = new Engine(LEVELS[0]).reset()
   const hits = e.ping()
-  ok('ping returns echoes', hits.length > 0, `${hits.length} sectors`)
+  ok('ping returns echoes', hits.length > 0, `${hits.length} targets`)
   ok('every echo is within range', hits.every((h) => h.dist > 0 && h.dist <= 560))
-  ok('echoes carry a material', hits.every((h) => typeof h.mat === 'string'))
+  ok('every echo carries a pitch', hits.every((h) => h.hz > 0 && Number.isFinite(h.hz)))
+  ok('every echo has a kind', hits.every((h) => ['wall', 'objective', 'exit'].includes(h.kind)))
+}
+
+// --- the new target-based ping ---
+console.log('\nsonar targets')
+{
+  const e = new Engine(LEVELS[0]).reset()
+  const targets = e.acousticTargets()
+  const walls = targets.filter((t) => t.kind === 'wall')
+  const objs = targets.filter((t) => t.kind === 'objective')
+  ok('every wall is a target', walls.length === e.solids.length, `${walls.length} walls`)
+  ok('every objective is a target', objs.length === LEVELS[0].objectives.length)
+  ok('the exit is a target', targets.filter((t) => t.kind === 'exit').length === 1)
+}
+{
+  // A wall must answer from the point nearest the rover, not from its centre.
+  // The centre of a block is inside solid geometry and would sound buried.
+  const e = new Engine(LEVELS[0]).reset()
+  e.player.x = 110
+  e.player.y = 300
+  const hits = e.ping()
+  const wallHits = hits.filter((h) => h.kind === 'wall')
+  ok('walls answer from their nearest point', wallHits.length > 0)
+  // Nothing should ever report a distance shorter than the rover's own radius.
+  ok('no wall sounds like it is inside the rover', wallHits.every((h) => h.dist >= ROVER_R - 1.5),
+    `closest wall at ${Math.min(...wallHits.map((h) => h.dist)).toFixed(1)} units`)
+}
+{
+  // Each objective must sit a semitone above the last, so you can tell them
+  // apart by pitch.
+  const e = new Engine(LEVELS[4]).reset() // Homeward has six
+  const objs = e.acousticTargets().filter((t) => t.kind === 'objective')
+  let climbing = true
+  for (let i = 1; i < objs.length; i++) if (objs[i].hz <= objs[i - 1].hz) climbing = false
+  ok('objectives rise in pitch', climbing, objs.map((o) => o.hz.toFixed(0)).join(' -> '))
+  ok('objectives are brighter than walls', objs.every((o) => o.hz > 700))
+}
+{
+  // Occlusion is the test that makes this a sonar rather than a map.
+  // Reactor Ring has a 320-unit solid core; from the far side of it you must
+  // not hear the objectives in the opposite corridor.
+  const level = LEVELS[2]
+  const e = new Engine(level).reset()
+  const far = level.objectives[0] // top-left corner, opposite the bottom corridor
+
+  // Stand in the bottom corridor, directly below the core.
+  e.player.x = 460
+  e.player.y = 700
+  const hidden = e.ping().some((h) => h.kind === 'objective' && h.index === 0)
+  ok('a target behind solid rock is silent', !hidden)
+
+  // Move into the same corridor as the target and it should answer.
+  e.player.x = 460
+  e.player.y = 180
+  const heard = e.ping().some((h) => h.kind === 'objective' && h.index === 0)
+  ok('a target in clear view answers', heard)
+}
+{
+  // Bearing must be measured from where the rover is FACING, not from +x, or
+  // panning would not tell the player which way to turn.
+  const e = new Engine(LEVELS[0]).reset()
+  const t = e.objectives[0]
+  e.player.x = t.x - 300
+  e.player.y = t.y
+  e.player.angle = 0 // facing +x, and the objective sits due east
+  const ahead = e.ping().find((h) => h.kind === 'objective' && h.index === 0)
+  ok('a target dead ahead has zero bearing', !!ahead && Math.abs(ahead.bearing) < 0.2,
+    ahead ? `${ahead.bearing.toFixed(3)} rad at ${ahead.dist.toFixed(0)} units` : 'objective not audible')
+
+  e.player.angle = Math.PI // spun around; now it is dead behind
+  const behind = e.ping().find((h) => h.kind === 'objective' && h.index === 0)
+  ok('spinning around puts the target behind', !!behind && Math.abs(behind.bearing) > 2.9,
+    behind ? `${behind.bearing.toFixed(3)} rad` : 'objective not audible')
+
+  e.player.angle = Math.PI / 2 // facing +y (down); target now 90 degrees to the left
+  const side = e.ping().find((h) => h.kind === 'objective' && h.index === 0)
+  ok('a target to the side reads as a quarter turn', !!side && Math.abs(Math.abs(side.bearing) - Math.PI / 2) < 0.2,
+    side ? `${(side.bearing * 180 / Math.PI).toFixed(0)} deg` : 'objective not audible')
+}
+{
+  // Distances must be strictly ordered in the hit list, because the audio
+  // layer schedules them purely by that order of arrival.
+  const e = new Engine(LEVELS[2]).reset()
+  const hits = e.ping()
+  const sorted = [...hits].sort((a, b) => a.dist - b.dist)
+  ok('hits arrive nearest-first', hits.every((h, i) => i === 0 || h.dist >= hits[i - 1].dist))
+  ok('sorted copy is stable', JSON.stringify(sorted.map((h) => h.dist)) === JSON.stringify(hits.map((h) => h.dist)))
+}
+{
+  // The scope draws each hit using its absolute world angle, and it must equal
+  // facing + bearing or the echoes appear in the wrong direction.
+  const e = new Engine(LEVELS[1]).reset()
+  const hits = e.ping()
+  ok('every hit carries a world angle', hits.every((h) => Number.isFinite(h.world)))
+  ok('world angle equals facing plus bearing', hits.every((h) => Math.abs(angleDelta(h.world, e.player.angle + h.bearing)) < 1e-6))
 }
 
 // --- the feedback cues the player navigates by ---
@@ -275,13 +370,26 @@ console.log('\nfeedback cues')
 {
   // The other half of the contact fix: free space must NOT report contact, or
   // the rover would thud at itself the whole time it drives.
-  const e = new Engine(LEVELS[1]).reset()
-  let bumps = 0
-  for (let i = 0; i < 120; i++) {
-    e.step(STEP, { throttle: 1, turn: 0.4 })
-    for (const ev of e.events) if (ev.type === 'bump') bumps++
+  //
+  // This uses a bare room rather than a level, because the subject is the
+  // contact detector, not the level layout. Pointing it at a level means every
+  // time that level is redesigned the test is really asserting "this specific
+  // drive happened to stay clear", which says nothing useful.
+  const bare = {
+    ...LEVELS[0],
+    room: { x: 60, y: 60, w: 3000, h: 3000 },
+    walls: [],
+    spawn: { x: 1560, y: 1560, angle: 0 }, // dead centre, so no wall is reachable
   }
-  ok('driving clear of walls is silent', bumps === 0, `${bumps} false contacts in 2s`)
+  for (const turn of [0, 0.4, -0.4]) {
+    const e = new Engine(bare).reset()
+    let bumps = 0
+    for (let i = 0; i < 240; i++) {
+      e.step(STEP, { throttle: 1, turn })
+      for (const ev of e.events) if (ev.type === 'bump') bumps++
+    }
+    ok(`driving open space at turn ${turn} is silent`, bumps === 0, `${bumps} false contacts in 4s`)
+  }
 }
 {
   // A bump and a refused interaction must be different events, so the two can

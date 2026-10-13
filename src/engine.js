@@ -17,19 +17,23 @@
  * player only has to learn one idea: turn to face a thing, then hold forward.
  */
 
-import { castRay, resolveCircle, angleDelta, clamp, roomWalls } from './geometry.js'
-import { PING_RANGE } from './audio.js'
+import { resolveCircle, angleDelta, clamp, roomWalls, nearestOnRect, clearLine } from './geometry.js'
+import { matOf, PING_RANGE } from './levels.js'
 
 export const ROVER_R = 14
 const SPEED = 170
 const TURN_RATE = 2.8
-/** Radians of turn per second at full stick. */
-const PING_RAYS = 36
-/** Echoes closer together than this in bearing are merged into one tone. */
-const SECTOR = Math.PI / 6
 const PING_COOLDOWN = 0.35
 /** How close you must be to use an objective. */
 export const INTERACT_RANGE = 48
+
+// --- what things sound like ---
+// Walls answer at their material pitch, so you learn the room by ear. The
+// objective and the exit need their own signatures, high and pure, so they are
+// never mistaken for more hull. Each objective sits a semitone above the last,
+// which means you can tell *which* one is answering without looking.
+const OBJECTIVE_HZ = 784 // G5
+const EXIT_HZ = 1046.5 // C6
 
 // --- approach ticks: the primary way to find the target ---
 // A soft tick repeats on a beat that speeds up as you close on the objective.
@@ -178,31 +182,75 @@ export class Engine {
   }
 
   /**
-   * Echolocation. Casts rays all the way round, keeps the nearest surface in
-   * each 30-degree sector, and hands the result to the audio layer.
+   * Everything the sonar can listen to, as points in the world.
    *
-   * Merging matters: a bare wall straight ahead would otherwise return a dozen
-   * near-identical tones and turn into mush. One tone per sector means every
-   * sound you hear is a distinct direction.
+   * A wall contributes the point on it nearest to the rover, which is where the
+   * wall will answer from. Objectives and the exit contribute themselves. The
+   * list is built once — the geometry never moves — and only the rover's
+   * position changes what is audible.
+   */
+  acousticTargets() {
+    if (this._targets) return this._targets
+    const list = []
+    for (const s of this.solids) {
+      list.push({ rect: s, mat: s.mat, kind: 'wall', hz: matOf(s.mat).hz })
+    }
+    for (const o of this.objectives) {
+      list.push({
+        x: o.x,
+        y: o.y,
+        kind: 'objective',
+        index: o.index,
+        // A semitone higher for each one, so you can hear which is answering.
+        hz: OBJECTIVE_HZ * Math.pow(2, o.index / 12),
+      })
+    }
+    list.push({ x: this.exit.x, y: this.exit.y, kind: 'exit', hz: EXIT_HZ })
+    this._targets = list
+    return list
+  }
+
+  /**
+   * Echolocation.
+   *
+   * No ray fan. Every accessible thing in the level is measured directly: the
+   * distance from the rover to it becomes the delay before its tone arrives,
+   * and the bearing to it becomes the side the tone is panned to. One sound per
+   * real object, each one an actual direction you can turn towards.
+   *
+   * "Accessible" is the whole point of the test below. Anything with solid
+   * geometry between it and the rover does not answer, so a wall behind a wall
+   * is silent and you have to fly round to find out what is there.
    */
   ping() {
     const p = this.player
     this._nextPingAt = this.time + PING_COOLDOWN
 
-    const sectors = new Map()
-    for (let i = 0; i < PING_RAYS; i++) {
-      const world = p.angle - Math.PI + (i / (PING_RAYS - 1)) * Math.PI * 2
-      const hit = castRay(p.x, p.y, Math.cos(world), Math.sin(world), PING_RANGE, this.solids)
-      if (!hit) continue
-      const rel = angleDelta(p.angle, world)
-      const key = Math.round(rel / SECTOR)
-      const prev = sectors.get(key)
-      if (!prev || hit.dist < prev.dist) {
-        sectors.set(key, { dist: hit.dist, bearing: rel, mat: hit.mat, world })
-      }
+    const hits = []
+    for (const t of this.acousticTargets()) {
+      // A wall answers from its nearest point; everything else from itself.
+      const point = t.rect ? nearestOnRect(p.x, p.y, t.rect) : t
+      const dist = point.dist ?? Math.hypot(t.x - p.x, t.y - p.y)
+      if (dist > PING_RANGE || dist < 2) continue
+
+      const x = point.x ?? t.x
+      const y = point.y ?? t.y
+      // Occluded by other geometry? Then the sonar never reaches it.
+      if (!clearLine(p.x, p.y, x, y, this.solids, t.rect)) continue
+
+      const bearing = angleDelta(p.angle, Math.atan2(y - p.y, x - p.x))
+      hits.push({
+        dist,
+        bearing,
+        world: p.angle + bearing,
+        hz: t.hz,
+        kind: t.kind,
+        mat: t.mat,
+        index: t.index,
+      })
     }
 
-    const hits = [...sectors.values()].sort((a, b) => a.dist - b.dist)
+    hits.sort((a, b) => a.dist - b.dist)
     this.pings.push({ born: this.time, hits, range: PING_RANGE })
     if (this.pings.length > 3) this.pings.shift()
     // `onTarget` travels with the ping so the audio layer can make the chirp

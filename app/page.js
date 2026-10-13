@@ -60,6 +60,11 @@ export default function Page() {
     if (screen !== SCREEN.PLAY) return
     const input = inputRef.current
     const audio = audioRef.current
+    // Paired with the endMission() in the cleanup below. It has to live here
+    // and not in launch(), because StrictMode mounts, unmounts and remounts
+    // this effect, and the throwaway unmount would otherwise silence the
+    // engine note for the rest of the session.
+    audio.startMission()
     let last = performance.now()
 
     const frame = (now) => {
@@ -88,8 +93,6 @@ export default function Page() {
           audio.echoes(ev.hits)
         } else if (ev.type === 'approach') {
           audio.approachTick(ev.bearing, ev.distance)
-        } else if (ev.type === 'listen') {
-          audio.setListen(ev.level, ev.distance)
         } else if (ev.type === 'bump') {
           audio.thud(ev.strength)
         } else if (ev.type === 'denied') {
@@ -103,6 +106,11 @@ export default function Page() {
         }
       }
       audio.setThrottle(Math.abs(engine.player.throttle))
+      // Driven straight off the input rather than the engine's `listen` event,
+      // because the engine only emits that event while the key is HELD. Reading
+      // the event alone left the static bed at its last level after release,
+      // which is the same "the sound never stops" bug as the engine hum.
+      audio.setListen(input.listen ? 1 : 0, engine.targetDistance)
 
       // --- the on-screen readout (hidden in blind mode) ---
       if (engine.index !== before || engine.time % 0.1 < dt) {
@@ -124,7 +132,13 @@ export default function Page() {
     }
 
     rafRef.current = requestAnimationFrame(frame)
-    return () => cancelAnimationFrame(rafRef.current)
+    return () => {
+      cancelAnimationFrame(rafRef.current)
+      // Leaving the mission — finished, quit, or bailed with Escape — is the
+      // one place that silences the engine note. It used to sit at whatever
+      // throttle you left it on and drone on across the menu forever.
+      audio.endMission()
+    }
   }, [screen])
 
   // --- menu keyboard nav ---

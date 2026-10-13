@@ -148,5 +148,18 @@ export default function Scope({ engine, width = 620, height = 460 }) {
     return () => cancelAnimationFrame(raf)
   }, [engine, width, height])
 
-  return <canvas ref={canvasRef} width={width} height={height} style={{ display: 'block', borderRadius: 8, maxWidth: '100%' }} />
+  return (
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      style={{
+        display: 'block',
+        maxWidth: '100%',
+        borderRadius: 16,
+        border: '1px solid rgba(255, 255, 255, 0.07)',
+        boxShadow: '0 18px 40px -28px rgba(0, 0, 0, 0.95)',
+      }}
+    />
+  )
 }

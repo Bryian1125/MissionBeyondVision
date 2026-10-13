@@ -1,82 +1,129 @@
+/* --- design tokens ---
+   One place for the whole look. Colours are a calm navy rather than near-black,
+   the accent is warmed down from neon, and every corner is drawn from the three
+   radii below so nothing ends up sharper than anything else. */
 :root {
-  --bg: #05070c;
-  --panel: #0d1220;
-  --line: #1e2740;
-  --text: #cfe0ff;
-  --dim: #7f92b8;
-  --live: #ffd166;
-  --ok: #7ee0a0;
+  color-scheme: dark;
+
+  --bg: #0a0f1e;
+  --bg-glow: #17223c;
+  --panel: #121a2e;
+  --panel-2: #18223a;
+  --panel-3: #1e2942;
+
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  --text: #e9eefb;
+  --dim: #9fb0d0;
+  --faint: #7284a6;
+
+  --accent: #ffcf6b;
+  --accent-soft: rgba(255, 207, 107, 0.12);
+  --accent-ink: #2b2005;
+  --ok: #86e0a8;
+
+  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-lg: 22px;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 18px 40px -28px rgba(0, 0, 0, 0.95);
+  --ease: 150ms ease;
 }
 
 * {
   box-sizing: border-box;
 }
 
-html,
+html {
+  background: var(--bg);
+}
+
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 560px at 50% -12%, var(--bg-glow), transparent 68%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, Roboto,
+    Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 .wrap {
   min-height: 100vh;
-  max-width: 760px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 32px 20px 64px;
+  padding: 48px 24px 72px;
 }
 
 .wrap.play {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
+/* --- type ---
+   The wordmark is left in the case it was written in; only its size and weight
+   are set here. Wide-tracked all-caps is dropped everywhere it is not doing a
+   job, and the remaining eyebrow labels keep a restrained letter-spacing. */
 h1 {
-  font-size: 30px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin: 0 0 6px;
-}
-
-h2 {
-  font-size: 15px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--dim);
+  font-size: clamp(28px, 6vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
   margin: 0 0 10px;
 }
 
+h2 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text);
+  margin: 0 0 14px;
+}
+
 h3 {
-  font-size: 12px;
-  letter-spacing: 0.1em;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--live);
-  margin: 0 0 8px;
+  color: var(--accent);
+  margin: 0 0 10px;
 }
 
 .sub {
   color: var(--dim);
-  margin: 0 0 24px;
+  font-size: 17px;
+  margin: 0 0 28px;
 }
 
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 18px;
-  margin-bottom: 18px;
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
 }
 
 .hint {
   color: var(--dim);
-  font-size: 14px;
-  line-height: 1.6;
-  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.65;
+  margin: 10px 0 0;
 }
 
 /* --- level list --- */
@@ -86,79 +133,105 @@ h3 {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .level {
   width: 100%;
   text-align: left;
-  background: #0a0f1c;
+  background: var(--panel-2);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  padding: 15px 17px;
   color: var(--text);
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
+  transition: border-color var(--ease), background var(--ease),
+    transform var(--ease), box-shadow var(--ease);
 }
 
 .level:hover {
-  border-color: #33405f;
+  border-color: var(--line-strong);
+  background: var(--panel-3);
+  transform: translateY(-1px);
 }
 
 .level.sel {
-  border-color: var(--live);
-  background: #12182a;
+  border-color: var(--accent);
+  background: var(--panel-2);
+  box-shadow: 0 0 0 1px var(--accent), 0 10px 26px -18px rgba(255, 207, 107, 0.7);
 }
 
 .level strong {
-  font-size: 15px;
-  letter-spacing: 0.04em;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .level span {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--dim);
   line-height: 1.5;
 }
 
+/* --- buttons --- */
 button {
   font: inherit;
   cursor: pointer;
 }
 
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .go {
   width: 100%;
-  background: var(--live);
-  color: #1a1405;
+  background: var(--accent);
+  color: var(--accent-ink);
   border: 0;
-  border-radius: 8px;
-  padding: 13px 16px;
+  border-radius: 14px;
+  padding: 15px 20px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  transition: filter var(--ease), transform 100ms ease;
+}
+
+.go:hover {
+  filter: brightness(1.06);
+}
+
+.go:active {
+  transform: translateY(1px);
 }
 
 .ghost {
-  background: transparent;
-  color: var(--dim);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 9px 14px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 12px;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  transition: background var(--ease), border-color var(--ease);
 }
 
 .ghost:hover {
-  color: var(--text);
-  border-color: #33405f;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--line-strong);
+}
+
+.go + .ghost {
+  margin-top: 12px;
 }
 
 .bar {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -166,29 +239,51 @@ button {
 /* --- hud --- */
 .hud {
   display: flex;
-  gap: 20px;
-  font-size: 14px;
+  gap: 4px 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 15px;
   color: var(--dim);
   font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 /* --- controls --- */
 .cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 24px;
 }
 
 .controls ul {
   margin: 0;
-  padding-left: 18px;
-  font-size: 14px;
+  padding-left: 20px;
+  font-size: 15px;
   line-height: 1.9;
   color: var(--text);
 }
 
+.controls li::marker {
+  color: var(--faint);
+}
+
 @media (max-width: 560px) {
+  .wrap {
+    padding: 32px 18px 56px;
+  }
+
   .cols {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .level:hover {
+    transform: none;
   }
 }
