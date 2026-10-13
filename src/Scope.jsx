@@ -11,23 +11,13 @@
 
 import { useEffect, useRef } from 'react'
 
-const BG = '#07090f'
-const WALL_EDGE = '#3d4a6b'
-const ROOM = '#4a5a80'
-const DONE = '#2f6b4f'
-const LIVE = '#ffd166'
-const EXIT_OPEN = '#7ee0a0'
-const EXIT_SHUT = '#5a4a6b'
-
-/** Tints match the pitch each material answers a ping with, so a sighted
- *  player learns the same mapping a blind player learns by ear. */
-const MAT_COLOR = {
-  hull: '#2b3550',
-  grate: '#31405e',
-  crate: '#3a3350',
-  rock: '#2f3a44',
-  ice: '#2b4a5c',
-}
+const BG = '#08061f'
+const ROOM = '#6a5cd8'
+const OBSTACLE = '#2b2568'
+const DONE = '#4fd18b'
+const LIVE = '#8272e8'
+const EXIT_OPEN = '#5ad1a0'
+const EXIT_SHUT = '#4a4680'
 
 export default function Scope({ engine, width = 620, height = 460 }) {
   const canvasRef = useRef(null)
@@ -61,14 +51,11 @@ export default function Scope({ engine, width = 620, height = 460 }) {
       ctx.lineWidth = 3
       ctx.strokeRect(X(room.x), Y(room.y), room.w * scale, room.h * scale)
 
-      // --- interior blocks ---
+      // --- interior blocks: one flat colour, no outline ---
       for (const w of e.solids) {
         if (w.outer) continue // the room outline above already covers these
-        ctx.fillStyle = MAT_COLOR[w.mat] || MAT_COLOR.hull
+        ctx.fillStyle = OBSTACLE
         ctx.fillRect(X(w.x), Y(w.y), w.w * scale, w.h * scale)
-        ctx.strokeStyle = WALL_EDGE
-        ctx.lineWidth = 1
-        ctx.strokeRect(X(w.x), Y(w.y), w.w * scale, w.h * scale)
       }
 
       // --- ping rings: the echoes, drawn as they would sound ---
@@ -77,7 +64,7 @@ export default function Scope({ engine, width = 620, height = 460 }) {
         const life = (ping.range * 0.0024) + 0.5
         const t = age / life
         if (t < 0 || t > 1) continue
-        ctx.strokeStyle = `rgba(120, 200, 255, ${0.5 * (1 - t)})`
+        ctx.strokeStyle = `rgba(190, 180, 255, ${0.55 * (1 - t)})`
         ctx.lineWidth = 2
         for (const hit of ping.hits) {
           const d = hit.dist * scale * t
@@ -93,7 +80,7 @@ export default function Scope({ engine, width = 620, height = 460 }) {
         const cy = Y(o.y)
         ctx.beginPath()
         ctx.arc(cx, cy, 9, 0, Math.PI * 2)
-        ctx.fillStyle = o.done ? DONE : o.index === e.index ? LIVE : '#7a6a3a'
+        ctx.fillStyle = o.done ? DONE : o.index === e.index ? LIVE : '#6a63b5'
         ctx.fill()
         if (o.index === e.index && !o.done) {
           // A ring around whatever you are being sent to next.
@@ -124,7 +111,7 @@ export default function Scope({ engine, width = 620, height = 460 }) {
       ctx.save()
       ctx.translate(px, py)
       ctx.rotate(e.player.angle)
-      ctx.fillStyle = e.player.bump > 0.2 ? '#ff8a6b' : '#8fd3ff'
+      ctx.fillStyle = e.player.bump > 0.2 ? '#ff7a5c' : '#f4f0ff'
       ctx.beginPath()
       ctx.moveTo(14, 0)
       ctx.lineTo(-9, 8)
@@ -135,7 +122,7 @@ export default function Scope({ engine, width = 620, height = 460 }) {
       ctx.restore()
 
       // --- the cone it is about to sweep ---
-      ctx.strokeStyle = 'rgba(143, 211, 255, 0.25)'
+      ctx.strokeStyle = 'rgba(190, 180, 255, 0.25)'
       ctx.lineWidth = 1
       ctx.beginPath()
       ctx.moveTo(px, py)
@@ -157,8 +144,8 @@ export default function Scope({ engine, width = 620, height = 460 }) {
         display: 'block',
         maxWidth: '100%',
         borderRadius: 16,
-        border: '1px solid rgba(255, 255, 255, 0.07)',
-        boxShadow: '0 18px 40px -28px rgba(0, 0, 0, 0.95)',
+        border: '1px solid rgba(190, 175, 255, 0.18)',
+        boxShadow: '0 18px 40px -28px rgba(0, 0, 0, 0.9)',
       }}
     />
   )

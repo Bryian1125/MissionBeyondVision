@@ -1,33 +1,34 @@
 /* --- design tokens ---
-   One place for the whole look. Colours are a calm navy rather than near-black,
-   the accent is warmed down from neon, and every corner is drawn from the three
-   radii below so nothing ends up sharper than anything else. */
+   One place for the whole look. Deep cosmic violets — midnight purple rather
+   than plain blue — with a single soft amethyst accent, kept a notch below full
+   brightness so it registers as colour without glowing. Every corner is drawn
+   from the three radii below so nothing ends up sharper than anything else. */
 :root {
   color-scheme: dark;
 
-  --bg: #0a0f1e;
-  --bg-glow: #17223c;
-  --panel: #121a2e;
-  --panel-2: #18223a;
-  --panel-3: #1e2942;
+  --bg: #0b0a2b;
+  --bg-glow: #2a1f6e;
+  --panel: #16123c;
+  --panel-2: #1b1749;
+  --panel-3: #221d59;
 
-  --line: rgba(255, 255, 255, 0.07);
-  --line-strong: rgba(255, 255, 255, 0.16);
+  --line: rgba(190, 175, 255, 0.16);
+  --line-strong: rgba(190, 175, 255, 0.32);
 
-  --text: #e9eefb;
-  --dim: #9fb0d0;
-  --faint: #7284a6;
+  --text: #ece9ff;
+  --dim: #a9a3d8;
+  --faint: #7d78ad;
 
-  --accent: #ffcf6b;
-  --accent-soft: rgba(255, 207, 107, 0.12);
-  --accent-ink: #2b2005;
-  --ok: #86e0a8;
+  --accent: #8272e8;
+  --accent-soft: rgba(130, 114, 232, 0.18);
+  --accent-ink: #120a2e;
+  --ok: #4fd18b;
 
   --radius-sm: 12px;
   --radius: 16px;
   --radius-lg: 22px;
 
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 18px 40px -28px rgba(0, 0, 0, 0.95);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 18px 40px -28px rgba(0, 0, 0, 0.9);
   --ease: 150ms ease;
 }
 
@@ -161,7 +162,7 @@ h3 {
 .level.sel {
   border-color: var(--accent);
   background: var(--panel-2);
-  box-shadow: 0 0 0 1px var(--accent), 0 10px 26px -18px rgba(255, 207, 107, 0.7);
+  box-shadow: 0 0 0 1px var(--accent), 0 10px 26px -18px rgba(130, 114, 232, 0.8);
 }
 
 .level strong {
@@ -209,7 +210,7 @@ button:focus-visible {
 }
 
 .ghost {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(190, 175, 255, 0.07);
   color: var(--text);
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -221,7 +222,7 @@ button:focus-visible {
 }
 
 .ghost:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(190, 175, 255, 0.14);
   border-color: var(--line-strong);
 }
 
