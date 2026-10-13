@@ -2,15 +2,13 @@
  * input.js — keyboard and gamepad collapsed into one snapshot.
  *
  * The game only ever asks for five things, so this file only ever produces
- * five things. The right stick is the attitude control: push it left or right
- * and the rover rotates. The left stick is throttle, and throttle is applied
- * along the direction you are facing.
+ * five things. The D-pad is the control: left and right rotate the rover, up
+ * and down is throttle, and throttle is applied along the direction you are
+ * facing.
  */
 
 const KEY_TURN = { ArrowLeft: -1, KeyA: -1, ArrowRight: 1, KeyD: 1 }
 const KEY_THROTTLE = { ArrowUp: 1, KeyW: 1, ArrowDown: -1, KeyS: -1 }
-
-const DEADZONE = 0.2
 
 /** Standard gamepad mapping: A/B/X/Y, bumpers, triggers, d-pad. */
 const BTN = {
@@ -20,6 +18,10 @@ const BTN = {
   altPing: 2, // X
   listen: 4, // left bumper
   back: 8,
+  up: 12, // d-pad up
+  down: 13, // d-pad down
+  left: 14, // d-pad left
+  right: 15, // d-pad right
 }
 
 export class Input {
@@ -101,22 +103,17 @@ export class Input {
 
     const pad = this._pad()
     if (pad) {
-      const dead = (v) => (Math.abs(v) < DEADZONE ? 0 : v)
-      // Right stick is the attitude control; fall back to the left stick X on
-      // pads that do not report a right stick.
-      const rx = dead(pad.axes[2] || 0)
-      const ry = dead(pad.axes[3] || 0)
-      const lx = dead(pad.axes[0] || 0)
-      const ly = dead(pad.axes[1] || 0)
-
-      turn += Math.abs(rx) > 0 ? rx : lx
-      // Stick up is negative Y, and up means forward.
-      throttle += Math.abs(ly) > 0 ? -ly : -ry
-
       const held = (i) => {
         const b = pad.buttons[i]
         return !!b && (b.pressed || b.value > 0.5)
       }
+      // The D-pad drives. Left and right turn, up and down is throttle, and up
+      // means forward.
+      if (held(BTN.left)) turn -= 1
+      if (held(BTN.right)) turn += 1
+      if (held(BTN.up)) throttle += 1
+      if (held(BTN.down)) throttle -= 1
+
       if (held(BTN.listen)) listen = 1
       if (held(BTN.interact)) this._interact = true
       if (held(BTN.ping) || held(BTN.pingAlt)) this._ping = true

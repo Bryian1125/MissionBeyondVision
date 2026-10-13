@@ -277,8 +277,8 @@ function Controls() {
         <div>
           <h3>Gamepad</h3>
           <ul>
-            <li>Right stick left/right — turn</li>
-            <li>Left stick up/down — drive forward / back</li>
+            <li>D-pad left/right — turn</li>
+            <li>D-pad up/down — drive forward / back</li>
             <li>B or right trigger — ping</li>
             <li>A — interact</li>
             <li>Left bumper — hold to listen</li>

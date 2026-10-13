@@ -87,8 +87,8 @@ timing as well, so it survives a player who cannot separate two tones.
 
 | | Gamepad | Keyboard |
 |---|---|---|
-| Turn (attitude) | right stick left/right | Left / Right arrows, or A / D |
-| Drive | left stick up/down | Up / Down arrows, or W / S |
+| Turn (attitude) | D-pad left/right | Left / Right arrows, or A / D |
+| Drive | D-pad up/down | Up / Down arrows, or W / S |
 | Ping | B, X or right trigger | Space |
 | Interact | A | E or Enter |
 | Listen (hold) | left bumper | Shift |
