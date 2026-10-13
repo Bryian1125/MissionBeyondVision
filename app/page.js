@@ -209,7 +209,7 @@ export default function Page() {
   if (screen === SCREEN.DONE) {
     const next = levelIndex + 1
     return (
-      <main className="wrap">
+      <main className="wrap center">
         <h1>mission complete</h1>
         <p className="sub">{LEVELS[levelIndex].name} — done.</p>
         <div className="panel">

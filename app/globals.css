@@ -73,7 +73,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 16px;
+}
+
+/* Vertically centred screens — anything except the mission select page. */
+.wrap.center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* --- type ---
