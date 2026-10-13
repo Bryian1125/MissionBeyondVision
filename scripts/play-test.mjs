@@ -12,8 +12,8 @@
  */
 
 import { LEVELS } from '../src/levels.js'
-import { Engine, ROVER_R, INTERACT_RANGE } from '../src/engine.js'
-import { roomWalls, resolveCircle, angleDelta, clamp } from '../src/geometry.js'
+import { Engine, ROVER_R } from '../src/engine.js'
+import { resolveCircle, angleDelta, clamp } from '../src/geometry.js'
 
 const STEP = 1 / 60
 const GRID = 30

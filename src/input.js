@@ -16,7 +16,6 @@ const BTN = {
   pingAlt: 7, // right trigger
   altPing: 2, // X
   listen: 4, // left bumper
-  back: 8,
   up: 12, // d-pad up
   down: 13, // d-pad down
   left: 14, // d-pad left
@@ -32,7 +31,6 @@ export class Input {
     this._ping = false
     this._handlers = null
     this.padIndex = null
-    this.padName = ''
   }
 
   attach() {
@@ -74,12 +72,10 @@ export class Input {
     for (const p of pads) {
       if (p && p.connected) {
         this.padIndex = p.index
-        this.padName = p.id
         return p
       }
     }
     this.padIndex = null
-    this.padName = ''
     return null
   }
 

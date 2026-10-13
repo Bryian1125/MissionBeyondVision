@@ -7,7 +7,7 @@
  * scripts/check-levels.mjs).
  *
  * Control model, deliberately tiny:
- *   turn      -1..1   rotate left/right (right stick X)
+ *   turn      -1..1   rotate left/right (D-pad)
  *   throttle  -1..1   drive along the direction you are FACING
  *   ping               one echolocation pulse
  *   listen    0..1    hold to swell the static as you close on the objective
