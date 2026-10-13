@@ -34,9 +34,9 @@ export class Audio {
     this.ready = false
     this.muted = false
     /**
-     * The engine hum and the listen static only sound while a mission is being
-     * flown. Between missions they are silent, so returning to the menu is
-     * quiet and the next launch starts from silence again.
+     * The listen static only sounds while a mission is being flown. Between
+     * missions it is silent, so returning to the menu is quiet and the next
+     * launch starts from silence again.
      */
     this.missionActive = false
   }
@@ -59,20 +59,6 @@ export class Audio {
     this.master = ctx.createGain()
     this.master.gain.value = 0.9
     this.master.connect(ctx.destination)
-
-    // --- engine hum: one oscillator, running for the whole session ---
-    this.humGain = ctx.createGain()
-    this.humGain.gain.value = 0
-    this.humFilter = ctx.createBiquadFilter()
-    this.humFilter.type = 'lowpass'
-    this.humFilter.frequency.value = 320
-    this.humOsc = ctx.createOscillator()
-    this.humOsc.type = 'sawtooth'
-    this.humOsc.frequency.value = 62
-    this.humOsc.connect(this.humFilter)
-    this.humFilter.connect(this.humGain)
-    this.humGain.connect(this.master)
-    this.humOsc.start()
 
     // --- listen static: filtered noise, swells as you near a target ---
     this.noise = ctx.createBufferSource()
@@ -109,10 +95,7 @@ export class Audio {
     if (this.master) this.master.gain.value = m ? 0 : 0.9
   }
 
-  /**
-   * Mission flight has begun. The hum ramps up from silence on the first
-   * `setThrottle` call, so this does not need to make any noise itself.
-   */
+  /** Mission flight has begun. */
   startMission() {
     this.missionActive = true
   }
@@ -120,26 +103,16 @@ export class Audio {
   /**
    * Mission flight is over — completed, quit, or bailed to the menu.
    *
-   * Without this the engine note simply stayed at whatever level you left it
-   * at, and the rover kept rumbling away on the level select screen forever.
-   * Gains are ramped rather than cut, so it fades out instead of clicking.
+   * Without this the listen static simply stayed at whatever level you left it
+   * at on the level select screen. It is ramped rather than cut, so it fades out
+   * instead of clicking.
    */
   endMission() {
     this.missionActive = false
     if (!this.ready) return
     const now = this.now
-    for (const gain of [this.humGain.gain, this.noiseGain.gain]) {
-      gain.cancelScheduledValues(now)
-      gain.setTargetAtTime(0, now, 0.12)
-    }
-  }
-
-  /** Engine note follows throttle, so you can hear how fast you are moving. */
-  setThrottle(t) {
-    if (!this.ready || !this.missionActive) return
-    const now = this.now
-    this.humGain.gain.setTargetAtTime(0.035 + t * 0.05, now, 0.08)
-    this.humOsc.frequency.setTargetAtTime(58 + t * 26, now, 0.1)
+    this.noiseGain.gain.cancelScheduledValues(now)
+    this.noiseGain.gain.setTargetAtTime(0, now, 0.12)
   }
 
   /** Static swells as the current objective gets closer. 0 = far, 1 = on it. */

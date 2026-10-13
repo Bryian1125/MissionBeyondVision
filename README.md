@@ -75,7 +75,6 @@ range is the interaction — there is no button to press.
 | **Ticks at a flutter** | you are essentially there |
 | **Low dull thud** | you are pressed against a wall. Repeats every 0.25s while you stay on it, and gets harder with throttle |
 | **Rising two-note chime, pitched higher each time** | objective used. The pitch climbs with each one, so you know how many are left by ear alone |
-| **Low steady hum** | engine. Rises with throttle. Only sounds *during* a mission — it fades out the moment you finish, quit, or bail to the menu, and starts from silence on the next launch |
 | **Rising four-note fanfare** | level complete |
 | **Static bed while holding listen** | swells as you close on the objective. Cuts off the instant you release, and at the end of a mission |
 
@@ -183,7 +182,7 @@ prints the autopilot's frame-by-frame decisions when something fails.
 | `src/levels.js` | the content. Plain data, easy to edit. |
 | `src/geometry.js` | raycasts, collision, line of sight, the flood fill. No game rules. |
 | `src/engine.js` | the rules and the 2D loop. No rendering, no audio, no React. |
-| `src/audio.js` | Web Audio: ping, echoes, approach ticks, wall thud, engine hum, listen static. |
+| `src/audio.js` | Web Audio: ping, echoes, approach ticks, wall thud, listen static. |
 | `src/input.js` | keyboard and gamepad collapsed into one snapshot. |
 | `src/Scope.jsx` | the visible 2D plane. The blind mode button hides this. |
 | `app/page.js` | screens, the frame loop, and wiring. |

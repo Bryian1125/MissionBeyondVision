@@ -63,7 +63,7 @@ export default function Page() {
     // Paired with the endMission() in the cleanup below. It has to live here
     // and not in launch(), because StrictMode mounts, unmounts and remounts
     // this effect, and the throwaway unmount would otherwise silence the
-    // engine note for the rest of the session.
+    // listen static for the rest of the session.
     audio.startMission()
     let last = performance.now()
 
@@ -102,11 +102,9 @@ export default function Page() {
           audio.fanfare()
         }
       }
-      audio.setThrottle(Math.abs(engine.player.throttle))
       // Driven straight off the input rather than the engine's `listen` event,
       // because the engine only emits that event while the key is HELD. Reading
-      // the event alone left the static bed at its last level after release,
-      // which is the same "the sound never stops" bug as the engine hum.
+      // the event alone left the static bed at its last level after release.
       audio.setListen(input.listen ? 1 : 0, engine.targetDistance)
 
       // --- the on-screen readout (hidden in blind mode) ---
@@ -132,8 +130,8 @@ export default function Page() {
     return () => {
       cancelAnimationFrame(rafRef.current)
       // Leaving the mission — finished, quit, or bailed with Escape — is the
-      // one place that silences the engine note. It used to sit at whatever
-      // throttle you left it on and drone on across the menu forever.
+      // one place that silences the listen static, so it does not carry on
+      // across the menu.
       audio.endMission()
     }
   }, [screen])
