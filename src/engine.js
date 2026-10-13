@@ -10,7 +10,6 @@
  *   turn      -1..1   rotate left/right (right stick X)
  *   throttle  -1..1   drive along the direction you are FACING
  *   ping               one echolocation pulse
- *   interact           use the objective you are next to
  *   listen    0..1    hold to swell the static as you close on the objective
  *
  * Because throttle is applied along the facing vector and nothing else, a
@@ -109,7 +108,7 @@ export class Engine {
 
   /**
    * Advance one frame.
-   * `input` is { turn, throttle, ping, interact, listen }.
+   * `input` is { turn, throttle, ping, listen }.
    */
   step(dt, input = {}) {
     // Clear last frame's events here, at the TOP, not at the bottom. The
@@ -176,7 +175,12 @@ export class Engine {
       this.emit('approach', { bearing: this.targetBearing, distance: this.targetDistance })
     }
 
-    if (input.interact) this.interact()
+    // --- interact ---
+    // Standing on the objective *is* the interaction. There is no button to
+    // press and no prompt to answer: the moment the rover is inside
+    // INTERACT_RANGE the current target is used, so a player who has flown all
+    // the way here cannot be stopped by an action they never knew to take.
+    if (this.inRange) this.interact()
 
     return this
   }
@@ -261,15 +265,11 @@ export class Engine {
     return hits
   }
 
-  /** Use the objective you are next to. No penalty for missing. */
+  /** Use the objective you are next to. Called automatically when in range. */
   interact() {
     if (this.finished) return false
     const t = this.target
     if (!t) return false
-    if (!this.inRange) {
-      this.emit('denied', { target: t, distance: this.targetDistance, bearing: this.targetBearing })
-      return false
-    }
 
     if (this.index < this.objectives.length) {
       t.done = true

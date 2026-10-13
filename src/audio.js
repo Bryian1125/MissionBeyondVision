@@ -257,9 +257,7 @@ export class Audio {
 
   /**
    * You are against a solid surface. Low, dull and noise-based so it cannot be
-   * mistaken for the refusal chime, and loudness follows how hard you hit it.
-   * This is deliberately a different sound from `deny()`: pressing into a wall
-   * is not the same event as failing to reach an objective.
+   * mistaken for anything else, and loudness follows how hard you hit it.
    */
   thud(strength = 1) {
     if (!this.ready) return
@@ -290,14 +288,6 @@ export class Audio {
     const t = this.now
     this._blip(t, 523.25 * Math.pow(1.122, step), 0.12, 0.14, 0)
     this._blip(t + 0.09, 783.99 * Math.pow(1.122, step), 0.22, 0.14, 0)
-  }
-
-  /** Falling pair: you tried to use something that was out of reach. */
-  deny() {
-    if (!this.ready) return
-    const t = this.now
-    this._blip(t, 300, 0.1, 0.11, 0, 'square')
-    this._blip(t + 0.08, 210, 0.18, 0.11, 0, 'square')
   }
 
   /** Neutral tick for menu movement. */

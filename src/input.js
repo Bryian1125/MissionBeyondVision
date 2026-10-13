@@ -1,8 +1,8 @@
 /**
  * input.js — keyboard and gamepad collapsed into one snapshot.
  *
- * The game only ever asks for five things, so this file only ever produces
- * five things. The D-pad is the control: left and right rotate the rover, up
+ * The game only ever asks for four things, so this file only ever produces
+ * four things. The D-pad is the control: left and right rotate the rover, up
  * and down is throttle, and throttle is applied along the direction you are
  * facing.
  */
@@ -12,7 +12,6 @@ const KEY_THROTTLE = { ArrowUp: 1, KeyW: 1, ArrowDown: -1, KeyS: -1 }
 
 /** Standard gamepad mapping: A/B/X/Y, bumpers, triggers, d-pad. */
 const BTN = {
-  interact: 0, // A
   ping: 1, // B
   pingAlt: 7, // right trigger
   altPing: 2, // X
@@ -31,7 +30,6 @@ export class Input {
     this.throttle = 0
     this.listen = 0
     this._ping = false
-    this._interact = false
     this._handlers = null
     this.padIndex = null
     this.padName = ''
@@ -45,10 +43,6 @@ export class Input {
       if (e.code === 'Space') {
         e.preventDefault()
         this._ping = true
-      }
-      if (e.code === 'Enter' || e.code === 'KeyE') {
-        e.preventDefault()
-        this._interact = true
       }
       if (e.code === 'Escape' || e.code === 'Backspace') this.onEscape?.()
       if (e.code === 'KeyM') this.onMute?.()
@@ -115,7 +109,6 @@ export class Input {
       if (held(BTN.down)) throttle -= 1
 
       if (held(BTN.listen)) listen = 1
-      if (held(BTN.interact)) this._interact = true
       if (held(BTN.ping) || held(BTN.pingAlt)) this._ping = true
       if (held(BTN.altPing)) this._ping = true
     }
@@ -128,9 +121,8 @@ export class Input {
 
   /** Read and clear the edge-triggered actions. */
   consume() {
-    const out = { ping: this._ping, interact: this._interact }
+    const out = { ping: this._ping }
     this._ping = false
-    this._interact = false
     return out
   }
 }

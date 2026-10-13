@@ -162,8 +162,6 @@ for (const level of LEVELS) {
     usedPing = engine.pings.length > 0 || usedPing
     for (const ev of engine.events) if (ev.type === 'bump') bumps++
 
-    // Use the objective when close enough.
-    if (engine.inRange) engine.step(0, { interact: true })
     if (engine.index !== before) {
       path = []
       wp = 0
@@ -232,14 +230,6 @@ console.log('movement model')
 }
 function level0Left() {
   return LEVELS[0].room.x + ROVER_R
-}
-{
-  // Interacting out of range must be refused, not silently accepted.
-  const e = new Engine(LEVELS[0]).reset()
-  e.player.x = LEVELS[0].spawn.x
-  e.player.y = LEVELS[0].spawn.y
-  const took = e.interact()
-  ok('cannot use an objective from across the room', took === false && e.index === 0)
 }
 {
   // Ping must find the room.
@@ -349,7 +339,7 @@ console.log('\nsonar targets')
 console.log('\nfeedback cues')
 {
   // Wall contact must be rate-limited. This is the bug that made pressing into
-  // a wall machine-gun at 60 Hz and sound identical to a refused interaction.
+  // a wall machine-gun at 60 Hz.
   const e = new Engine(LEVELS[0]).reset()
   e.player.x = 100
   e.player.y = 300
@@ -390,13 +380,6 @@ console.log('\nfeedback cues')
     }
     ok(`driving open space at turn ${turn} is silent`, bumps === 0, `${bumps} false contacts in 4s`)
   }
-}
-{
-  // A bump and a refused interaction must be different events, so the two can
-  // get different sounds.
-  const e = new Engine(LEVELS[0]).reset()
-  e.interact()
-  ok('out-of-range interact is a distinct event', e.events.some((ev) => ev.type === 'denied'))
 }
 {
   // The approach tick must fire faster the closer the objective is.

@@ -83,7 +83,6 @@ export default function Page() {
         throttle: input.throttle,
         listen: input.listen,
         ping: edges.ping,
-        interact: edges.interact,
       })
 
       // --- react to what the engine emitted ---
@@ -95,8 +94,6 @@ export default function Page() {
           audio.approachTick(ev.bearing, ev.distance)
         } else if (ev.type === 'bump') {
           audio.thud(ev.strength)
-        } else if (ev.type === 'denied') {
-          audio.deny()
         } else if (ev.type === 'objective') {
           audio.confirm(ev.remaining)
         } else if (ev.type === 'exitOpen') {
@@ -264,7 +261,7 @@ export default function Page() {
         </button>
       </div>
 
-      {blind && <p className="hint">Scope hidden. Fly by ear — Space to ping, E to interact.</p>}
+      {blind && <p className="hint">Scope hidden. Fly by ear — Space to ping.</p>}
     </main>
   )
 }
@@ -280,7 +277,6 @@ function Controls() {
             <li>D-pad left/right — turn</li>
             <li>D-pad up/down — drive forward / back</li>
             <li>B or right trigger — ping</li>
-            <li>A — interact</li>
             <li>Left bumper — hold to listen</li>
           </ul>
         </div>
@@ -290,7 +286,6 @@ function Controls() {
             <li>Left / Right arrows — turn</li>
             <li>Up / Down arrows — drive</li>
             <li>Space — ping</li>
-            <li>E or Enter — interact</li>
             <li>Shift — hold to listen</li>
             <li>M — mute</li>
           </ul>

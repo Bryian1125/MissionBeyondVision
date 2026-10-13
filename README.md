@@ -51,8 +51,8 @@ ahead, then hold forward" is a complete navigation method. That is the whole gam
 On top of that, a tick repeats toward the objective on a beat that speeds up as
 you close, panned by bearing — so the tick alone tells you both which way to turn
 and whether to keep going. **Ping and the chirp answers back differently when you
-are standing on the objective**, which is how you know you are in range. Press
-**interact** to use it.
+are standing on the objective**, which is how you know you are in range. Being in
+range is the interaction — there is no button to press.
 
 > The tick is radar — it always tells you the way and rough range. The ping is
 > sonar — it tells you what is actually around you right now. They answer
@@ -64,7 +64,7 @@ are standing on the objective**, which is how you know you are in range. Press
 | Sound | Meaning |
 |---|---|
 | **Chirp** | a ping went out |
-| **Bright rising pair instead of the chirp** | you are *on* the objective — press interact |
+| **Bright rising pair instead of the chirp** | you are *on* the objective; it is used automatically |
 | **A tone arriving later** | something is that far away. Each one is a real, separate thing |
 | **Tone panned left or right** | that thing is that way, relative to your facing |
 | **Low rough tone** | a wall, at that material's pitch |
@@ -73,9 +73,8 @@ are standing on the objective**, which is how you know you are in range. Press
 | **Click every 50 units on the way out** | a ruler — count the clicks before a tone arrives to judge distance |
 | **Ticks while you drive** | distance to the objective. The beat **speeds up as you close** — nothing to count. Panned, so it also tells you which way to turn |
 | **Ticks at a flutter** | you are essentially there |
-| **Low dull thud** | you are pressed against a wall. Repeats every 0.25s while you stay on it, and gets harder with throttle. This is a *different* sound from the refusal chime |
+| **Low dull thud** | you are pressed against a wall. Repeats every 0.25s while you stay on it, and gets harder with throttle |
 | **Rising two-note chime, pitched higher each time** | objective used. The pitch climbs with each one, so you know how many are left by ear alone |
-| **Falling square pair** | you tried to use something that was out of range |
 | **Low steady hum** | engine. Rises with throttle. Only sounds *during* a mission — it fades out the moment you finish, quit, or bail to the menu, and starts from silence on the next launch |
 | **Rising four-note fanfare** | level complete |
 | **Static bed while holding listen** | swells as you close on the objective. Cuts off the instant you release, and at the end of a mission |
@@ -90,7 +89,6 @@ timing as well, so it survives a player who cannot separate two tones.
 | Turn (attitude) | D-pad left/right | Left / Right arrows, or A / D |
 | Drive | D-pad up/down | Up / Down arrows, or W / S |
 | Ping | B, X or right trigger | Space |
-| Interact | A | E or Enter |
 | Listen (hold) | left bumper | Shift |
 | Mute | — | M |
 | Back to mission list | — | Escape |
